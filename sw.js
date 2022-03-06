@@ -20,10 +20,12 @@ const libScripts = [
   'lib/databr.js'
 ];
 const onsenUI = [
-  'https://unpkg.com/onsenui/css/onsen-css-components.min.css',
-  'https://unpkg.com/onsenui/css/onsenui.css',
-  'https://unpkg.com/onsenui/js/onsenui.min.js',
-  'https://unpkg.com/onsenui@2.11.2/css/material-design-iconic-font/css/material-design-iconic-font.min.css'
+  'https://unpkg.com/onsenui@2.11.2/css/onsen-css-components.min.css',
+  'https://unpkg.com/onsenui@2.11.2/css/onsenui-core.min.css',
+  'https://unpkg.com/onsenui@2.11.2/css/onsenui.min.css',
+  'https://unpkg.com/onsenui@2.11.2/js/onsenui.min.js',
+  'https://unpkg.com/onsenui@2.11.2/css/material-design-iconic-font/css/material-design-iconic-font.min.css',
+  'https://unpkg.com/onsenui@2.11.2/css/material-design-iconic-font/fonts/Material-Design-Iconic-Font.woff2'
 ];
 const filesToCache = ["capture.js", ...libScripts, ...onsenUI];
 
