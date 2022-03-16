@@ -45,7 +45,7 @@
   const registerSW = async () => {
     if ('serviceWorker' in navigator) {
       try {
-        await navigator.serviceWorker.register(`https://rabiaanjum621.github.io/QR_Code_Scanner/sw.js`);
+        await navigator.serviceWorker.register(`${window.location.href}sw.js`);
         console.log('Service Worker Registered');
       } catch (e) {
         console.error('Error registering Service Worker...', e);

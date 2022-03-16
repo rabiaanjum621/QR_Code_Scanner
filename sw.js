@@ -59,7 +59,6 @@ const process = (input) => {
     qrcode.imagedata = input.imageData;
  
     result = qrcode.process();
-    console.log("qrcode");
     broadcast.postMessage({ type: "READING", result });
   } catch (e) {}
 };

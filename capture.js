@@ -47,9 +47,10 @@ videoState.broadcast.onmessage = (event) => {
   if (event.data){
     clearInterval(videoState.setIntervalTimer)
     readingQRCodes = false
+    if (videoState.setIntervalTimer) clearTimeout(videoState.setIntervalTimer);
+   
     videoState.showResultsTimeout = setTimeout(() => {
-      console.log('QRCode Data: ', event.data.result);
-      copyToClipboard(event.data.result);
+       copyToClipboard(event.data.result);
       takePicture(() =>
         ons.notification.toast(event.data.result, {
           timeout: 500,
@@ -135,6 +136,7 @@ const processImg = () => {
       /** GET THE IMAGE DATA FROM THE CTX AFTER DRAWING, CTX.GETIMAGEDATA()  **/
        const imageData = ctx.getImageData(0, 0, elements.canvas.width, elements.canvas.height);
      /** USE THE BROADCAST CHANNEL ON THE VIDEOSTATE OBJECT TO SEND THE IMAGE DATA, HEIGHT & WIDTH ACROSS TO THE SERVICE WORKER  **/
+     if (elements.canvas.width && elements.canvas.height) {
      videoState.broadcast.postMessage({
       type: "READING",
       input: {
@@ -143,6 +145,7 @@ const processImg = () => {
         imageData: imageData,
       },
     });
+  }
     }
   }
 };
@@ -172,6 +175,7 @@ const clearPhoto = () => {
   /** reading = true **/
   /** clearInterval() **/
   /** setInterval() **/
+  if (videoState.setIntervalTimer) 
   clearInterval(videoState.setIntervalTimer);
   setInterval(processImg,250);
   setTimeout(transitionEnd, 250);
@@ -191,6 +195,7 @@ const initiateStream = async (opts) => {
     transitionEnd();
     /** clearInterval() **/
     /** setInterval() **/
+    if (videoState.setIntervalTimer) 
     clearInterval(videoState.setIntervalTimer)
     setInterval(processImg,250)
   } catch (e) {
