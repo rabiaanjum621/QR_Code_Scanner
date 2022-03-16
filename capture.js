@@ -29,8 +29,11 @@ const videoState = {
   startAgainTimeout: null,
   /** ADD 3 NEW PROPERTIES **/
   /** 1 - BROADCAST CHANNEL INSTANCE **/
+  broadcast: new BroadcastChannel('QRCode_Reader'),
   /** 2 - BOOLEAN FOR TRACKING IF WE ARE READING QR CODES **/
+  readingQRCodes: true,
   /** 3 - VARIABLE FOR HOLDING SETINTERVAL TIMER ID (TO CLEAR LATER) **/
+  setIntervalTimer: null,
 };
 
 /** SET UP THE VIDEOSTATE BROADCAST CHANNEL ONMESSAGE EVENT LISTENER **/
@@ -41,6 +44,20 @@ const videoState = {
 /** 5 - TAKE A PICTURE AND PASS A CALLBACK FUNCTION THAT WILL DISPLAY THE DATA AS A ONSEN UI TOAST NOTIFICATION **/
 /** RESOURCE - https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API */
 videoState.broadcast.onmessage = (event) => {
+  if (event.data){
+    clearInterval(videoState.setIntervalTimer)
+    readingQRCodes = false
+    videoState.showResultsTimeout = setTimeout(() => {
+      console.log('QRCode Data: ', event.data.result);
+      copyToClipboard(event.data.result);
+      takePicture(() =>
+        ons.notification.toast(event.data.result, {
+          timeout: 500,
+        })
+      );
+    }, 500);
+
+  } 
 
 };
 
@@ -51,10 +68,11 @@ videoState.broadcast.onmessage = (event) => {
 const copyToClipboard = async (text) => {
   try {
     /** ASK PERMISSION (navigator.permissions.query) **/ 
-
+    const result = await navigator.permissions.query({name: "clipboard-write"});
     /** IF GRANTED OR PROMPT WRITE TO CLIPBOARD **/ 
-    if (false) {
-      
+    if (result.state == "granted" || result.state == "prompt") {
+      /* write to the clipboard now */
+      navigator.clipboard.writeText(text);
     }
   } catch (e) {
     console.log(`Error copying to clipboard`, e);
@@ -66,7 +84,7 @@ const copyToClipboard = async (text) => {
 /** 2 - AFTER THE TRANSITIONEND SETTIMEOUT CHECK FOR A CALLBACK **/
 /** 3 - IF THERE IS A CALLBACK WAIT 500ms USING SETTIMEOUT TO CALL THE CALLBACK **/
 /** RESORUCE -  https://developer.mozilla.org/en-US/docs/Web/API/setTimeout **/
-const takePicture = () => {
+const takePicture = (callback) => {
   transitionStart();
   const ctx = elements.canvas.getContext('2d');
   const width = elements.video.videoWidth;
@@ -85,8 +103,9 @@ const takePicture = () => {
     elements.downloadButton.style.display = 'unset';
     setTimeout(transitionEnd, 250);
     /** CHECK IF THERE WAS A CALLBACK PASSED IN **/
-    if (false) {
+    if (callback) {
       /** IF THERE IS A CALLBACK, USE SETTIMEOUT TO WAIT 500ms TO CALL THE CALLBACK **/
+      setTimeout(callback, 500);
     }
   } else {
     clearPhoto();
@@ -103,17 +122,27 @@ const takePicture = () => {
 /** RESORUCE - https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API **/
 const processImg = () => {
   /** ONLY PROCESS IMAGES IF THE READING BOOLEAN IS TRUE ON THE VIDEOSTATE  **/
-  if(false) {
+  if(videoState.readingQRCodes) {
     /** GET THE CANVAS CTX & VIDEO HEIGHT/WIDTH JUST LIKE TAKEPICTURE  **/
     const ctx = elements.canvas.getContext('2d');
     const width = elements.video.videoWidth;
     const height = elements.video.videoHeight;
     if (width && height) {
+      elements.canvas.width = width;
+      elements.canvas.height = height;
        /** DRAW THE IMAGE ON THE CANVAS JUST LIKE TAKEPICTURE **/
-
-       /** GET THE IMAGE DATA FROM THE CTX AFTER DRAWING, CTX.GETIMAGEDATA()  **/
-
-       /** USE THE BROADCAST CHANNEL ON THE VIDEOSTATE OBJECT TO SEND THE IMAGE DATA, HEIGHT & WIDTH ACROSS TO THE SERVICE WORKER  **/
+       ctx.drawImage(elements.video, 0, 0, elements.canvas.width, elements.canvas.height);
+      /** GET THE IMAGE DATA FROM THE CTX AFTER DRAWING, CTX.GETIMAGEDATA()  **/
+       const imageData = ctx.getImageData(0, 0, elements.canvas.width, elements.canvas.height);
+     /** USE THE BROADCAST CHANNEL ON THE VIDEOSTATE OBJECT TO SEND THE IMAGE DATA, HEIGHT & WIDTH ACROSS TO THE SERVICE WORKER  **/
+     videoState.broadcast.postMessage({
+      type: "READING",
+      input: {
+        width: elements.canvas.width,
+        height: elements.canvas.height,
+        imageData: imageData,
+      },
+    });
     }
   }
 };
@@ -137,12 +166,14 @@ const clearPhoto = () => {
   elements.startButton.style.display = 'block';
   elements.flipButton.style.display = 'block';
   elements.restartButton.style.display = 'none';
-
+  videoState.readingQRCodes = true;
+  if(videoState.setIntervalTimer)
   /** SET VIDEOSTATE READING QR CODE BOOLEAN TO TRUE, RE SET UP THE PROCESS IMG SET INTERVAL AFTER CLEARING **/
   /** reading = true **/
   /** clearInterval() **/
   /** setInterval() **/
-
+  clearInterval(videoState.setIntervalTimer);
+  setInterval(processImg,250);
   setTimeout(transitionEnd, 250);
 };
 
@@ -160,6 +191,8 @@ const initiateStream = async (opts) => {
     transitionEnd();
     /** clearInterval() **/
     /** setInterval() **/
+    clearInterval(videoState.setIntervalTimer)
+    setInterval(processImg,250)
   } catch (e) {
     console.log('An error occurred: ' + e);
     elements.animateSwitch.style.backgroundColor = '#E63946';

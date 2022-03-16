@@ -30,11 +30,13 @@ const onsenUI = [
 const filesToCache = ["capture.js", ...libScripts, ...onsenUI];
 
 /** 1 - USE SELF.IMPORTSCRIPTS TO IMPORT THE LIBRARY SCRIPTS **/
+self.importScripts(...libScripts);
 /** 1a - THIS WILL EXPOSE THE qrcode OBJECT IN YOUR SERVICE WORKER CODE **/
 /** RESOURCE - https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts */
 
 /** 2 - CREATE BROADCAST CHANNEL API INSTANCE **/
 /** RESOURCE - https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API */
+const broadcast = new BroadcastChannel('QRCode_Reader');
 
 /** 3 - CREATE BROADCAST CHANNEL ONMESSAGE LISTENER TO PROCESS THE IMG USING THE LIBRARY **/
 /** 3a - YOUR ONMESSAGE LISTENER SHOULD RECEIVE THE IMAGE DATA, IMAGE WIDTH AND IMAGE HEIGHT **/
@@ -43,12 +45,31 @@ const filesToCache = ["capture.js", ...libScripts, ...onsenUI];
 /** 3d - IF THIS DOES NOT THROW AN EXCEPTION: SEND THE RESULT BACK TO THE FRONT END TO TRIGGER THE COPY TO CLIPBOARD + TOAST NOTIFICATION **/
 /** RESOURCE - https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API */
 /** RESOURCE - https://github.com/LazarSoft/jsqrcode */
+broadcast.onmessage = (e) => {
+  if (e.data && e.data.type === "READING") {
+    process(e.data.input);
+  }
+};
+
+const process = (input) => {
+  let result = false;
+  try {
+    qrcode.width = input.width;
+    qrcode.height = input.height;
+    qrcode.imagedata = input.imageData;
+ 
+    result = qrcode.process();
+    console.log("qrcode");
+    broadcast.postMessage({ type: "READING", result });
+  } catch (e) {}
+};
+
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(cacheName).then(async (cache) => {
     for (const file of filesToCache) {
       try {
-        await cache.add(file);
+        // await cache.add(file);
       } catch(e) {
         console.error(file, e);
       }

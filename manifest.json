@@ -1,10 +1,10 @@
 {
-  "name": "QR Code Scanner",
-  "short_name": "QR Scan",
-  "start_url": "https://evanburg.github.io/qrcode-pwa/",
+  "name": "Rabia QR Code Scanner",
+  "short_name": "QR Code Scanner",
+  "start_url": "http://127.0.0.1:5500/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#fff",
+  "background_color": "#89f0ca",
   "theme_color": "#000",
   "icons": [
     {
