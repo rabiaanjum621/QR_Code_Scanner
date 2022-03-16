@@ -1,10 +1,10 @@
 {
   "name": "Rabia QR Code Scanner",
   "short_name": "QR Code Scanner",
-  "start_url": "http://127.0.0.1:5500/",
+  "start_url": "https://rabiaanjum621.github.io/QR_Code_Scanner/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#89f0ca",
+  "background_color": "#89d9f0",
   "theme_color": "#000",
   "icons": [
     {
