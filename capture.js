@@ -44,12 +44,15 @@ const videoState = {
 /** 5 - TAKE A PICTURE AND PASS A CALLBACK FUNCTION THAT WILL DISPLAY THE DATA AS A ONSEN UI TOAST NOTIFICATION **/
 /** RESOURCE - https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API */
 videoState.broadcast.onmessage = (event) => {
-  if (event.data){
+ if (event.data){
+  if (videoState.setIntervalTimer){
     clearInterval(videoState.setIntervalTimer)
+  }
     readingQRCodes = false
-    if (videoState.setIntervalTimer) clearTimeout(videoState.setIntervalTimer);
-   
-    videoState.showResultsTimeout = setTimeout(() => {
+    if (videoState.setIntervalTimer) {
+    clearInterval(videoState.setIntervalTimer);
+    }
+    videoState.setIntervalTimer = setTimeout(() => {
        copyToClipboard(event.data.result);
       takePicture(() =>
         ons.notification.toast(event.data.result, {
@@ -58,8 +61,8 @@ videoState.broadcast.onmessage = (event) => {
       );
     }, 500);
 
-  } 
-
+  
+}
 };
 
 /** CREATE FUNCTION THAT TAKES A STRING AND SETS IT IN THE CLIPBOARD USING THE CLIPBOARD API **/
@@ -136,7 +139,6 @@ const processImg = () => {
       /** GET THE IMAGE DATA FROM THE CTX AFTER DRAWING, CTX.GETIMAGEDATA()  **/
        const imageData = ctx.getImageData(0, 0, elements.canvas.width, elements.canvas.height);
      /** USE THE BROADCAST CHANNEL ON THE VIDEOSTATE OBJECT TO SEND THE IMAGE DATA, HEIGHT & WIDTH ACROSS TO THE SERVICE WORKER  **/
-     if (elements.canvas.width && elements.canvas.height) {
      videoState.broadcast.postMessage({
       type: "READING",
       input: {
@@ -145,7 +147,6 @@ const processImg = () => {
         imageData: imageData,
       },
     });
-  }
     }
   }
 };
@@ -169,13 +170,12 @@ const clearPhoto = () => {
   elements.startButton.style.display = 'block';
   elements.flipButton.style.display = 'block';
   elements.restartButton.style.display = 'none';
-  videoState.readingQRCodes = true;
-  if(videoState.setIntervalTimer)
   /** SET VIDEOSTATE READING QR CODE BOOLEAN TO TRUE, RE SET UP THE PROCESS IMG SET INTERVAL AFTER CLEARING **/
   /** reading = true **/
+  videoState.readingQRCodes = true;
   /** clearInterval() **/
-  /** setInterval() **/
-  if (videoState.setIntervalTimer) 
+  /** setInterval() **/ 
+  if(videoState.setIntervalTimer)
   clearInterval(videoState.setIntervalTimer);
   setInterval(processImg,250);
   setTimeout(transitionEnd, 250);
